@@ -3,16 +3,16 @@
 #include <Ticker.h>
 
 /////////////////////////////////////// PINOS //////////////////////////////////////
-
-//Interrupt pins = 2 3 18 19 20 21
+//Sensor da tampa
+#define UV_Safety_PIN 2
 
 //Pinos Teclado 1x5
-#define ROW 2 // precisar ser pino com interrupção (verificar datasheet do arduino)
-#define COL1 3
-#define COL2 4
-#define COL3 5
-#define COL4 6
-#define COL5 7
+#define ROW 3 // precisar ser pino com interrupção (verificar datasheet do arduino)
+#define COL1 4
+#define COL2 5
+#define COL3 6
+#define COL4 7
+#define COL5 8
 
 //MotorBottom
 #define STEP_M1_PIN 9
@@ -22,17 +22,17 @@
 #define STEP_M2_PIN 12
 #define DIR_M2_PIN 13
 
-//Sensor da tampa
-#define UV_Safety_PIN 18
-
 //Solenoid
-#define SOLENOID_PIN 20
+#define SOLENOID_PIN 22
 
 //Bomba d'água
-#define PUMP_PIN 21
+#define PUMP_PIN 24
 
 //Torreta UV
-#define LEDS_UV 35
+#define LED_UV_PIN 26
+
+//Buzzer
+#define BUZZER_PIN 28
 
 //Nivel
 #define NIVEL_PIN A1
@@ -104,10 +104,11 @@ void setup() {
   digitalWrite(COL4, HIGH);
   digitalWrite(COL5, HIGH);
 
+  pinMode(LED_UV_PIN, OUTPUT); // configurar LEDS
   pinMode(PUMP_PIN, OUTPUT); //configurar bomba d'agua
   pinMode(SOLENOID_PIN, OUTPUT); //configurar solenoid
-
-  pinMode(LEDS_UV, OUTPUT); // configurar LEDS
+  pinMode(BUZZER_PIN, OUTPUT); //configurar solenoid
+  
 
 
   // Configuração do motor do topo
@@ -223,7 +224,7 @@ void Telas(int x){
 
   //TELA 3 - Timer
   else if (x == 3) {
-    //attachInterrupt(digitalPinToInterrupt(ROW), Backlight_ON, RISING);
+    attachInterrupt(digitalPinToInterrupt(ROW), Backlight_ON, RISING);
     if (lavagem == 1){
       Lavagem();
     }
@@ -233,6 +234,7 @@ void Telas(int x){
 
   else if (x == 4){
     delay(5000);
+    detachInterrupt(digitalPinToInterrupt(ROW));
     tela = 1;
   }
 }
@@ -342,7 +344,7 @@ void VolumeSelect(){
   }
   else if (key == '4'){
     linha = 1;
-    aux = 1;
+    aux = 0;
   }
 }
 
@@ -369,7 +371,7 @@ void MotorSpeedSelect(){
   }
   else if (key == '4'){
     linha = 1;
-    aux = 2;
+    aux = 1;
   }
 }
 
@@ -517,6 +519,8 @@ void TimerSelector() {
           for(int j = 0; j < 2; j++)
             tempo[i][j]= 0;
         }
+        tela = 1;
+        aux = 0;
       }
       if (lavagem == 1 && cura == 1){
         if (lin == 0){
@@ -681,14 +685,16 @@ void Cura() {
   while(motorTop.distanceToGo() != 0) {
     motorTop.run();
     timerTicker.update(); //atualiza display
-    digitalWrite(LEDS_UV, HIGH); // liga torreta
+    digitalWrite(LED_UV_PIN
+  , HIGH); // liga torreta
   }
 }
 
 
 void FimCura() {
   cura = 0;
-  digitalWrite(LEDS_UV, LOW);
+  digitalWrite(LED_UV_PIN
+, LOW);
   
   lcd.clear();
   lcd.setCursor(0, 0);
